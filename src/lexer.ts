@@ -218,7 +218,14 @@ export class Lexer {
     // Consume the closing "
     this.advance();
 
-    this.addToken(TokenType.STRING, value);
+    const escaped = value
+      .replace(/\\/g, "\\")
+      .replace(/\\"/g, '"') // double quote
+      .replace(/\\n/g, "\n") // newline
+      .replace(/\\r/g, "\r") // carriage return
+      .replace(/\\t/g, "\t"); // tab
+
+    this.addToken(TokenType.STRING, escaped);
   }
 
   private scanNumber(firstChar: string): void {

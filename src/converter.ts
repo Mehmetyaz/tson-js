@@ -57,18 +57,18 @@ export class TSONStringifier {
     }
 
     if (typeof value === "string") {
-      const backSlash = 92;
+      const backSlash = "\\";
 
       // Escape special characters like in JSON
       const escaped = value
-        .replace(/\\/g, "\\" + "\\")
-        .replace(/"/g, "\\" + '"') // double quote
-        .replace(/\n/g, "\\" + "n") // newline
-        .replace(/\r/g, "\\" + "r") // carriage return
-        .replace(/\t/g, "\\" + "t") // tab
-        .replace(/\f/g, "\\" + "f") // form feed
-        .replace("\b", "\\" + "b") // backspace. /\b not working
-        .replace(/\v/g, "\\" + "v"); // vertical tab
+        .replace(/\\/g, backSlash + backSlash)
+        .replace(/"/g, backSlash + '"') // double quote
+        .replace(/\n/g, backSlash + "n") // newline
+        .replace(/\r/g, backSlash + "r") // carriage return
+        .replace(/\t/g, backSlash + "t") // tab
+        .replace(/\f/g, backSlash + "f") // form feed
+        .replace("\b", backSlash + "b") // backspace. /\b not working
+        .replace(/\v/g, backSlash + "v"); // vertical tab
 
       // Always use double quotes for strings
       return `"${escaped}"`;
