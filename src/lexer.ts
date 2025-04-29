@@ -66,11 +66,11 @@ export class Lexer {
     const char = this.advance();
 
     switch (char) {
-      case "(":
-        this.addToken(TokenType.OPEN_PAREN, char);
+      case "{":
+        this.addToken(TokenType.OPEN_BRACE, char);
         break;
-      case ")":
-        this.addToken(TokenType.CLOSE_PAREN, char);
+      case "}":
+        this.addToken(TokenType.CLOSE_BRACE, char);
         break;
       case "[":
         this.addToken(TokenType.OPEN_BRACKET, char);
@@ -78,18 +78,42 @@ export class Lexer {
       case "]":
         this.addToken(TokenType.CLOSE_BRACKET, char);
         break;
-      case "{":
+      case "<":
+        this.addToken(TokenType.LESS_THAN, char);
+        break;
+      case ">":
+        this.addToken(TokenType.GREATER_THAN, char);
+        break;
+      case "(":
         throw new Error(
-          `Unexpected character: ${char} at line ${this.line}, column ${this.column}`
+          `Syntax error: Parentheses are no longer supported in TSON. Use curly braces {} instead at line ${this.line}, column ${this.column}`
         );
-      case "}":
+      case ")":
         throw new Error(
-          `Unexpected character: ${char} at line ${this.line}, column ${this.column}`
+          `Syntax error: Parentheses are no longer supported in TSON. Use curly braces {} instead at line ${this.line}, column ${this.column}`
         );
       case ",":
         this.addToken(TokenType.COMMA, char);
         break;
+      case "=":
+        // Float/double value indicator (changed from boolean)
+        this.addToken(TokenType.EQUALS, char);
+        break;
+      case "#":
+        // Integer value indicator
+        this.addToken(TokenType.HASH, char);
+        break;
+      case "&":
+        // Float/double value indicator (deprecated, replaced by =)
+        this.addToken(TokenType.AMPERSAND, char);
+        break;
+      case "?":
+        // Boolean value indicator (new)
+        this.addToken(TokenType.QUESTION, char);
+        break;
       case '"':
+        // Check if this is a direct string attachment (no space between name and string)
+        // This is handled directly by scanning the string
         this.scanQuotedString();
         break;
       case "\n":
@@ -121,7 +145,17 @@ export class Lexer {
         if (this.isDigit(char)) {
           this.scanNumber(char);
         } else if (this.isNameStart(char)) {
-          this.scanName(char);
+          // Check if the next character is a string, array, object, etc. indicator
+          const afterName = this.scanName(char);
+
+          // Check if we need to add an implicit null token
+          if (
+            afterName &&
+            this.isNextWhitespaceOrDelimiter() &&
+            !this.isSpecialOperator(this.peek())
+          ) {
+            this.addToken(TokenType.NULL, "null");
+          }
         } else if (char.trim() === "") {
           // Ignore whitespace
           break;
@@ -141,9 +175,22 @@ export class Lexer {
       next === "\r" ||
       next === "\n" ||
       next === "," ||
-      next === ")" ||
       next === "]" ||
+      next === "}" ||
       next === "\0"
+    );
+  }
+
+  private isSpecialOperator(char: string): boolean {
+    return (
+      char === "{" ||
+      char === "[" ||
+      char === '"' ||
+      char === "=" ||
+      char === "#" ||
+      char === "&" ||
+      char === "<" ||
+      char === ">"
     );
   }
 
@@ -248,25 +295,30 @@ export class Lexer {
     this.addToken(TokenType.NUMBER, value);
   }
 
-  private scanName(firstChar: string): void {
+  private scanName(firstChar: string): boolean {
     let value = firstChar;
+    let addedName = false;
 
-    while (this.isNamePart(this.peek()) && !this.isAtEnd()) {
+    while (this.isNamePart(this.peek())) {
       value += this.advance();
     }
 
-    // Check if the next character is an opening parenthesis or bracket
-    // If it is, then this is a property or function name, not a special keyword
-    const isPropertyName = this.peek() === "(" || this.peek() === "[";
-
-    // Check for boolean and null values only when not used as property names
-    if (!isPropertyName && (value === "true" || value === "false")) {
+    // Special case for boolean values true/false
+    if (value === "true" || value === "false") {
       this.addToken(TokenType.BOOLEAN, value);
-    } else if (!isPropertyName && value === "null") {
-      this.addToken(TokenType.NULL, value);
-    } else {
-      this.addToken(TokenType.NAME, value);
+      return false;
     }
+
+    // Special case for null
+    if (value === "null") {
+      this.addToken(TokenType.NULL, value);
+      return false;
+    }
+
+    this.addToken(TokenType.NAME, value);
+    addedName = true;
+
+    return addedName;
   }
 
   private isDigit(char: string): boolean {

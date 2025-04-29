@@ -52,22 +52,26 @@ export interface ParseOptions {
  * Token types for the lexer
  */
 export enum TokenType {
-  NAME,
-  OPEN_PAREN,
-  CLOSE_PAREN,
-  OPEN_BRACKET,
-  CLOSE_BRACKET,
-  OPEN_BRACE,
-  CLOSE_BRACE,
-  COMMA,
-  STRING,
-  NUMBER,
-  BOOLEAN,
-  NULL,
-  COMMENT_LINE,
-  COMMENT_BLOCK,
-  WHITESPACE,
-  EOF,
+  NAME, // name   0
+  OPEN_BRACKET, // [    1
+  CLOSE_BRACKET, // ]    2
+  OPEN_BRACE, // {      3
+  CLOSE_BRACE, // }      4
+  COMMA, // ,          5
+  STRING, // "string"   6
+  NUMBER, // 123        7
+  BOOLEAN, // true       8
+  NULL, // null         9
+  COMMENT_LINE, // // comment 10
+  COMMENT_BLOCK, // /* comment */ 11
+  WHITESPACE, // " "        12
+  EOF, // end of file     13
+  EQUALS, // =            14
+  HASH, // #              15
+  AMPERSAND, // &          16
+  LESS_THAN, // <          17
+  GREATER_THAN, // >          18
+  QUESTION, // ?          19
 }
 
 /**

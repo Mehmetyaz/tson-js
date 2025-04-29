@@ -43,27 +43,160 @@ export class Parser {
     if (this.check(TokenType.NAME)) {
       const name = this.advance().value;
 
-      if (this.match(TokenType.OPEN_PAREN)) {
-        // Named object or value: person(name(John), age(30)) or name(John)
-        const value = this.parseParenContent();
-        return this.wrapNamedValue(name, value);
-      } else if (this.match(TokenType.OPEN_BRACKET)) {
-        // Named array: colors[red, green, blue]
-        const array = this.parseArray();
-        return this.wrapNamedArray(name, array);
-      } else {
-        throw this.error(this.peek(), "Expected '(' or '[' after object name");
+      // Parse named values based on the next token type
+      switch (this.peek().type) {
+        case TokenType.OPEN_BRACE:
+          this.advance(); // consume '{'
+          // Named object: person{name"John", age#30}
+          return this.wrapNamedValue(name, this.parseObject());
+
+        case TokenType.LESS_THAN:
+          this.advance(); // consume '<'
+          // Array with type specifier: myArray<#>[1, 2, 3]
+          const typeSpecifier = this.parseArrayTypeSpecifier();
+
+          if (!this.match(TokenType.OPEN_BRACKET)) {
+            throw this.error(
+              this.peek(),
+              "Expected '[' after array type specifier"
+            );
+          }
+
+          return this.wrapNamedValue(name, this.parseArray(typeSpecifier));
+
+        case TokenType.OPEN_BRACKET:
+          this.advance(); // consume '['
+          // Named array: colors["red", "green", "blue"]
+          return this.wrapNamedArray(name, this.parseArray());
+
+        case TokenType.STRING:
+          this.advance(); // consume string token
+          // Direct string: name"John"
+          return this.wrapNamedValue(name, this.previous().value);
+
+        case TokenType.QUESTION:
+          this.advance(); // consume '?'
+          // Boolean: enabled?true
+          return this.wrapNamedValue(name, this.parseBoolean());
+
+        case TokenType.HASH:
+          this.advance(); // consume '#'
+          // Integer: age#30
+          return this.wrapNamedValue(name, this.parseInt());
+
+        case TokenType.EQUALS:
+          this.advance(); // consume '='
+          // Float: price=99.99
+          return this.wrapNamedValue(name, this.parseFloat());
+
+        case TokenType.AMPERSAND:
+          this.advance(); // consume '&'
+          // Float (deprecated): price&99.99
+          return this.wrapNamedValue(name, this.parseFloat());
+
+        default:
+          // Just a name with no value: standalone 'name' means null
+          return this.wrapNamedValue(name, null);
       }
-    } else if (this.match(TokenType.OPEN_PAREN)) {
-      // Unnamed object: (name(John), age(30))
-      return this.parseObject();
-    } else if (this.match(TokenType.OPEN_BRACKET)) {
-      // Unnamed array: [1, 2, 3]
-      return this.parseArray();
-    } else {
-      // Simple value at the root (shouldn't happen in valid TSON)
-      return this.parsePrimary();
     }
+
+    // Handle unnamed values at root level
+    switch (this.peek().type) {
+      case TokenType.OPEN_BRACE:
+        this.advance(); // consume '{'
+        // Unnamed object: {name"John", age#30}
+        return this.parseObject();
+
+      case TokenType.LESS_THAN:
+        this.advance(); // consume '<'
+        // Unnamed array with type specifier: <#>[1, 2, 3]
+        const typeSpecifier = this.parseArrayTypeSpecifier();
+
+        if (!this.match(TokenType.OPEN_BRACKET)) {
+          throw this.error(
+            this.peek(),
+            "Expected '[' after array type specifier"
+          );
+        }
+
+        return this.parseArray(typeSpecifier);
+
+      case TokenType.OPEN_BRACKET:
+        this.advance(); // consume '['
+        // Unnamed array: [1, 2, 3]
+        return this.parseArray();
+
+      case TokenType.STRING:
+        this.advance(); // consume string token
+        // String value
+        return this.previous().value;
+
+      case TokenType.NUMBER:
+        this.advance(); // consume number token
+        // Number value
+        return parseFloat(this.previous().value);
+
+      case TokenType.BOOLEAN:
+        this.advance(); // consume boolean token
+        // Boolean value
+        return this.previous().value === "true";
+
+      case TokenType.NULL:
+        this.advance(); // consume null token
+        // Null value
+        return null;
+
+      case TokenType.HASH:
+        this.advance(); // consume '#'
+        // Integer value with # prefix
+        return this.parseInt();
+
+      case TokenType.EQUALS:
+        this.advance(); // consume '='
+        // Float value with = prefix
+        return this.parseFloat();
+
+      case TokenType.AMPERSAND:
+        this.advance(); // consume '&'
+        // Float value with & prefix (deprecated)
+        return this.parseFloat();
+
+      case TokenType.QUESTION:
+        this.advance(); // consume '?'
+        // Boolean value with ? prefix
+        return this.parseBoolean();
+
+      default:
+        throw this.error(this.peek(), "Expected value");
+    }
+  }
+
+  private parseInt(): number {
+    if (!this.check(TokenType.NUMBER)) {
+      throw this.error(this.peek(), "Expected integer value after '#'");
+    }
+    return parseInt(this.advance().value, 10);
+  }
+
+  private parseFloat(): number {
+    if (!this.check(TokenType.NUMBER)) {
+      const symbol = this.previous().type === TokenType.EQUALS ? "=" : "&";
+      throw this.error(
+        this.peek(),
+        `Expected floating-point value after '${symbol}'`
+      );
+    }
+    return parseFloat(this.advance().value);
+  }
+
+  private parseBoolean(): boolean {
+    if (!this.check(TokenType.BOOLEAN)) {
+      throw this.error(
+        this.peek(),
+        "Expected boolean value (true or false) after '?'"
+      );
+    }
+    return this.advance().value === "true";
   }
 
   private wrapNamedValue(name: string, value: TSONValue): TSONObject {
@@ -72,34 +205,62 @@ export class Parser {
     return result;
   }
 
-  private wrapNamedObject(name: string, obj: TSONObject): TSONObject {
-    return this.wrapNamedValue(name, obj);
-  }
-
   private wrapNamedArray(name: string, array: TSONArray): TSONObject {
     return this.wrapNamedValue(name, array);
   }
 
-  private parseParenContent(): TSONValue {
-    // Check if this is an object with key-value pairs or just a single value
-    if (
-      this.check(TokenType.NAME) &&
-      (this.checkNext(TokenType.OPEN_PAREN) ||
-        this.checkNext(TokenType.OPEN_BRACKET))
-    ) {
-      // This is likely an object with multiple key-value pairs
-      return this.parseObject();
-    } else if (this.check(TokenType.CLOSE_PAREN)) {
-      // Empty object
-      this.advance(); // consume ')'
-      return {};
-    } else {
-      // This is a simple value in parentheses
-      const value = this.parsePrimary();
-      if (!this.match(TokenType.CLOSE_PAREN)) {
-        throw this.error(this.peek(), "Expected ')' after value");
-      }
-      return value;
+  // Parse array type specifier like <#>, <?>, <=>
+  private parseArrayTypeSpecifier(): string {
+    switch (this.peek().type) {
+      case TokenType.HASH:
+        this.advance(); // consume '#'
+        // Integer array
+        if (!this.match(TokenType.GREATER_THAN)) {
+          throw this.error(
+            this.peek(),
+            "Expected '>' after array type specifier"
+          );
+        }
+        return "#";
+
+      case TokenType.QUESTION:
+        this.advance(); // consume '?'
+        // Boolean array
+        if (!this.match(TokenType.GREATER_THAN)) {
+          throw this.error(
+            this.peek(),
+            "Expected '>' after array type specifier"
+          );
+        }
+        return "?";
+
+      case TokenType.EQUALS:
+        this.advance(); // consume '='
+        // Float array
+        if (!this.match(TokenType.GREATER_THAN)) {
+          throw this.error(
+            this.peek(),
+            "Expected '>' after array type specifier"
+          );
+        }
+        return "=";
+
+      case TokenType.AMPERSAND:
+        this.advance(); // consume '&'
+        // Float array (deprecated)
+        if (!this.match(TokenType.GREATER_THAN)) {
+          throw this.error(
+            this.peek(),
+            "Expected '>' after array type specifier"
+          );
+        }
+        return "&";
+
+      default:
+        throw this.error(
+          this.peek(),
+          "Expected array type specifier (# for integer, ? for boolean, = for float)"
+        );
     }
   }
 
@@ -107,7 +268,7 @@ export class Parser {
     const obj: TSONObject = {};
 
     // Empty object
-    if (this.match(TokenType.CLOSE_PAREN)) {
+    if (this.match(TokenType.CLOSE_BRACE)) {
       return obj;
     }
 
@@ -115,7 +276,7 @@ export class Parser {
       this.skipCommentsAndWhitespace();
 
       // Check for trailing comma
-      if (this.check(TokenType.CLOSE_PAREN)) {
+      if (this.check(TokenType.CLOSE_BRACE)) {
         break;
       }
 
@@ -126,29 +287,92 @@ export class Parser {
 
       const key = this.advance().value;
 
-      // Handle values
-      if (this.match(TokenType.OPEN_PAREN)) {
-        // Could be a nested object or a simple value in parentheses
-        obj[key] = this.parseParenContent();
-      } else if (this.match(TokenType.OPEN_BRACKET)) {
-        // Nested array
-        obj[key] = this.parseArray();
-      } else {
-        // Simple value
-        obj[key] = this.parsePrimary();
+      // Handle values based on the token type
+      switch (this.peek().type) {
+        case TokenType.OPEN_BRACE:
+          this.advance(); // consume '{'
+          // Nested object with the new syntax
+          obj[key] = this.parseObject();
+          break;
+
+        case TokenType.LESS_THAN:
+          this.advance(); // consume '<'
+          // Key with type specifier: items<#>[1, 2, 3]
+          const typeSpecifier = this.parseArrayTypeSpecifier();
+
+          if (!this.match(TokenType.OPEN_BRACKET)) {
+            throw this.error(
+              this.peek(),
+              "Expected '[' after array type specifier"
+            );
+          }
+
+          obj[key] = this.parseArray(typeSpecifier);
+          break;
+
+        case TokenType.OPEN_BRACKET:
+          this.advance(); // consume '['
+          // Nested array
+          obj[key] = this.parseArray();
+          break;
+
+        case TokenType.STRING:
+          this.advance(); // consume string token
+          // Direct string attachment: name"John"
+          obj[key] = this.previous().value;
+          break;
+
+        case TokenType.QUESTION:
+          this.advance(); // consume '?'
+          // Boolean: enabled?true
+          obj[key] = this.parseBoolean();
+          break;
+
+        case TokenType.HASH:
+          this.advance(); // consume '#'
+          // Integer: age#30
+          obj[key] = this.parseInt();
+          break;
+
+        case TokenType.EQUALS:
+          this.advance(); // consume '='
+          // Float: price=99.99
+          obj[key] = this.parseFloat();
+          break;
+
+        case TokenType.AMPERSAND:
+          this.advance(); // consume '&'
+          // Float: price&99.99 (deprecated)
+          obj[key] = this.parseFloat();
+          break;
+
+        case TokenType.NULL:
+          this.advance(); // consume null token
+          // Null value: notes
+          obj[key] = null;
+          break;
+
+        case TokenType.NAME:
+          // We have another name, means we're looking at a property with no explicit value
+          // In this case, it should be treated as null
+          obj[key] = null;
+          break;
+
+        default:
+          throw this.error(this.peek(), "Expected value");
       }
 
       this.skipCommentsAndWhitespace();
     } while (this.match(TokenType.COMMA));
 
-    if (!this.match(TokenType.CLOSE_PAREN)) {
-      throw this.error(this.peek(), "Expected ')' after object");
+    if (!this.match(TokenType.CLOSE_BRACE)) {
+      throw this.error(this.peek(), "Expected '}' after object");
     }
 
     return obj;
   }
 
-  private parseArray(): TSONArray {
+  private parseArray(typeSpecifier: string = ""): TSONArray {
     const array: TSONArray = [];
 
     // Empty array
@@ -164,30 +388,172 @@ export class Parser {
         break;
       }
 
-      if (this.check(TokenType.NAME) && this.checkNext(TokenType.OPEN_PAREN)) {
-        // Named object in array: person(name(John))
-        const name = this.advance().value;
-        this.advance(); // consume '('
-        const value = this.parseParenContent();
-        array.push(this.wrapNamedValue(name, value));
-      } else if (this.match(TokenType.OPEN_PAREN)) {
-        // Unnamed object in array: (name(John))
-        array.push(this.parseParenContent());
-      } else if (
-        this.check(TokenType.NAME) &&
-        this.checkNext(TokenType.OPEN_BRACKET)
-      ) {
-        // Named array in array: colors[red, green]
-        const name = this.advance().value;
-        this.advance(); // consume '['
-        const nestedArray = this.parseArray();
-        array.push(this.wrapNamedArray(name, nestedArray));
-      } else if (this.match(TokenType.OPEN_BRACKET)) {
-        // Unnamed array in array: [1, 2, 3]
-        array.push(this.parseArray());
+      // Parse array items based on token type
+      if (this.check(TokenType.NAME)) {
+        const nameToken = this.peek();
+        const name = nameToken.value;
+        this.advance(); // consume the name
+
+        // Handle named values in arrays
+        switch (this.peek().type) {
+          case TokenType.OPEN_BRACE:
+            this.advance(); // consume '{'
+            // Named object in array with new syntax: person{name"John"}
+            const value = this.parseObject();
+            array.push(this.wrapNamedValue(name, value));
+            break;
+
+          case TokenType.LESS_THAN:
+            this.advance(); // consume '<'
+            // Named array with type specifier: colors<#>[1, 2, 3]
+            const innerTypeSpecifier = this.parseArrayTypeSpecifier();
+
+            if (!this.match(TokenType.OPEN_BRACKET)) {
+              throw this.error(
+                this.peek(),
+                "Expected '[' after array type specifier"
+              );
+            }
+
+            array.push(
+              this.wrapNamedValue(name, this.parseArray(innerTypeSpecifier))
+            );
+            break;
+
+          case TokenType.OPEN_BRACKET:
+            this.advance(); // consume '['
+            // Named array in array: colors["red", "green"]
+            const nestedArray = this.parseArray();
+            array.push(this.wrapNamedArray(name, nestedArray));
+            break;
+
+          case TokenType.STRING:
+            this.advance(); // consume string token
+            // Direct string: name"John"
+            array.push(this.wrapNamedValue(name, this.previous().value));
+            break;
+
+          case TokenType.QUESTION:
+            this.advance(); // consume '?'
+            // Boolean: enabled?true
+            array.push(this.wrapNamedValue(name, this.parseBoolean()));
+            break;
+
+          case TokenType.HASH:
+            this.advance(); // consume '#'
+            // Integer: age#30
+            array.push(this.wrapNamedValue(name, this.parseInt()));
+            break;
+
+          case TokenType.EQUALS:
+            this.advance(); // consume '='
+            // Float: price=99.99
+            array.push(this.wrapNamedValue(name, this.parseFloat()));
+            break;
+
+          case TokenType.AMPERSAND:
+            this.advance(); // consume '&'
+            // Float: price&99.99 (deprecated)
+            array.push(this.wrapNamedValue(name, this.parseFloat()));
+            break;
+
+          default:
+            // Just a name, meaning null value
+            array.push(this.wrapNamedValue(name, null));
+            break;
+        }
       } else {
-        // Simple value
-        array.push(this.parsePrimary());
+        // Handle unnamed values in arrays
+        switch (this.peek().type) {
+          case TokenType.LESS_THAN:
+            this.advance(); // consume '<'
+            // Unnamed array with type specifier inside another array: <#>[1, 2, 3]
+            const innerTypeSpecifier = this.parseArrayTypeSpecifier();
+
+            if (!this.match(TokenType.OPEN_BRACKET)) {
+              throw this.error(
+                this.peek(),
+                "Expected '[' after array type specifier"
+              );
+            }
+
+            array.push(this.parseArray(innerTypeSpecifier));
+            break;
+
+          case TokenType.OPEN_BRACE:
+            this.advance(); // consume '{'
+            // Unnamed object in array with new syntax: {name"John"}
+            array.push(this.parseObject());
+            break;
+
+          case TokenType.OPEN_BRACKET:
+            this.advance(); // consume '['
+            // Unnamed array in array: [1, 2, 3]
+            array.push(this.parseArray());
+            break;
+
+          case TokenType.HASH:
+            this.advance(); // consume '#'
+            // Direct integer value in array: #42
+            array.push(this.parseInt());
+            break;
+
+          case TokenType.EQUALS:
+            this.advance(); // consume '='
+            // Direct float value in array: =99.99
+            array.push(this.parseFloat());
+            break;
+
+          case TokenType.AMPERSAND:
+            this.advance(); // consume '&'
+            // Direct float value in array: &99.99 (deprecated)
+            array.push(this.parseFloat());
+            break;
+
+          case TokenType.QUESTION:
+            this.advance(); // consume '?'
+            // Direct boolean value in array: ?true
+            array.push(this.parseBoolean());
+            break;
+
+          case TokenType.STRING:
+            this.advance(); // consume string token
+            // String value
+            array.push(this.previous().value);
+            break;
+
+          case TokenType.NUMBER:
+            this.advance(); // consume number token
+            // Decide type based on type specifier
+            const numValue = parseFloat(this.previous().value);
+            if (typeSpecifier === "#") {
+              // Force integer if in integer array
+              array.push(parseInt(this.previous().value, 10));
+            } else if (typeSpecifier === "=" || typeSpecifier === "&") {
+              // Keep as float if in float array
+              array.push(numValue);
+            } else {
+              // Otherwise, keep as is
+              array.push(numValue);
+            }
+            break;
+
+          case TokenType.BOOLEAN:
+            this.advance(); // consume boolean token
+            // Boolean value
+            array.push(this.previous().value === "true");
+            break;
+
+          case TokenType.NULL:
+            this.advance(); // consume null token
+            // Null value
+            array.push(null);
+            break;
+
+          default:
+            throw this.error(this.peek(), "Expected array item");
+            break;
+        }
       }
 
       this.skipCommentsAndWhitespace();
@@ -198,32 +564,6 @@ export class Parser {
     }
 
     return array;
-  }
-
-  private parsePrimary(): TSONValue {
-    this.skipCommentsAndWhitespace();
-
-    if (this.match(TokenType.STRING)) {
-      return this.previous().value;
-    }
-
-    if (this.match(TokenType.NUMBER)) {
-      return parseFloat(this.previous().value);
-    }
-
-    if (this.match(TokenType.BOOLEAN)) {
-      return this.previous().value === "true";
-    }
-
-    if (this.match(TokenType.NULL)) {
-      return null;
-    }
-
-    if (this.match(TokenType.NAME)) {
-      return this.previous().value;
-    }
-
-    throw this.error(this.peek(), "Expected value");
   }
 
   private skipCommentsAndWhitespace(): void {
