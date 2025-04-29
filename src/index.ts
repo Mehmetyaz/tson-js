@@ -8,7 +8,7 @@ import { ParseOptions, TSONValue, TSONObject, TSONArray } from "./types";
  * @param options Parsing options
  * @returns Parsed JavaScript value
  */
-export function parse(input: string, options?: ParseOptions): TSONValue {
+function parse(input: string, options?: ParseOptions): TSONValue {
   const parser = new Parser(options);
   return parser.parse(input);
 }
@@ -19,9 +19,11 @@ export function parse(input: string, options?: ParseOptions): TSONValue {
  * @param pretty Whether to format the output TSON
  * @returns TSON string
  */
-export function stringify(value: TSONValue, pretty: boolean = false): string {
+function stringify(value: TSONValue, pretty: boolean = false): string {
   return TSONStringifier.stringify(value, pretty);
 }
 
-// Re-export types
-export { TSONValue, TSONObject, TSONArray, ParseOptions };
+export const TSON = {
+  parse,
+  stringify,
+} as const;

@@ -114,6 +114,11 @@ export class Parser {
     do {
       this.skipCommentsAndWhitespace();
 
+      // Check for trailing comma
+      if (this.check(TokenType.CLOSE_PAREN)) {
+        break;
+      }
+
       // Parse key
       if (!this.check(TokenType.NAME)) {
         throw this.error(this.peek(), "Expected property name");
@@ -153,6 +158,11 @@ export class Parser {
 
     do {
       this.skipCommentsAndWhitespace();
+
+      // Check for trailing comma
+      if (this.check(TokenType.CLOSE_BRACKET)) {
+        break;
+      }
 
       if (this.check(TokenType.NAME) && this.checkNext(TokenType.OPEN_PAREN)) {
         // Named object in array: person(name(John))

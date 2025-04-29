@@ -1,35 +1,35 @@
-import { parse, stringify } from "../index";
+import { TSON } from "../index";
 import { describe, test, expect } from "@jest/globals";
 
 describe("TSON Parser", () => {
   test("should parse a simple object", () => {
     const input = "user(name(John), age(30))";
-    const result = parse(input);
+    const result = TSON.parse(input);
     expect(result).toEqual({ user: { name: "John", age: 30 } });
   });
 
   test("should parse an unnamed object", () => {
     const input = "(name(John), age(30))";
-    const result = parse(input);
+    const result = TSON.parse(input);
     expect(result).toEqual({ name: "John", age: 30 });
   });
 
   test("should parse a named array", () => {
     const input = "colors[red, green, blue]";
-    const result = parse(input);
+    const result = TSON.parse(input);
     expect(result).toEqual({ colors: ["red", "green", "blue"] });
   });
 
   test("should parse an unnamed array", () => {
     const input = "[1, 2, 3, 4, 5]";
-    const result = parse(input);
+    const result = TSON.parse(input);
     expect(result).toEqual([1, 2, 3, 4, 5]);
   });
 
   test("should parse nested objects", () => {
     const input =
       'person(name("John"), address(city("New York"), street("Broadway")))';
-    const result = parse(input);
+    const result = TSON.parse(input);
     expect(result).toEqual({
       person: {
         name: "John",
@@ -43,7 +43,7 @@ describe("TSON Parser", () => {
 
   test("should parse quoted strings", () => {
     const input = 'user(name("John Doe"), email("john.doe@example.com"))';
-    const result = parse(input);
+    const result = TSON.parse(input);
     expect(result).toEqual({
       user: {
         name: "John Doe",
@@ -54,7 +54,7 @@ describe("TSON Parser", () => {
 
   test("should parse special values", () => {
     const input = 'values(null(null), empty(""))';
-    const result = parse(input);
+    const result = TSON.parse(input);
     expect(result).toEqual({
       values: {
         null: null,
@@ -65,26 +65,26 @@ describe("TSON Parser", () => {
 
   test("should convert TSON to JSON", () => {
     const input = 'user(name("John"), age(30))';
-    const result = JSON.stringify(parse(input));
+    const result = JSON.stringify(TSON.parse(input));
     expect(result).toBe('{"user":{"name":"John","age":30}}');
   });
 
   test("should stringify JavaScript object to TSON", () => {
     const input = { user: { name: "John", age: 30 } };
-    const result = stringify(input);
+    const result = TSON.stringify(input);
     expect(result).toBe('user(name("John"), age(30))');
   });
 
   test("should convert JSON to TSON", () => {
     const input = '{"user":{"name":"John","age":30}}';
-    const result = stringify(JSON.parse(input));
+    const result = TSON.stringify(JSON.parse(input));
     expect(result).toBe('user(name("John"), age(30))');
   });
 
   test("should convert JSON Array to TSON", () => {
     const input =
       '{"users":[{"name":"John","age":30}, {"name":"Jane","age":25}]}';
-    const result = stringify(JSON.parse(input));
+    const result = TSON.stringify(JSON.parse(input));
     expect(result).toBe(
       'users[(name("John"), age(30)), (name("Jane"), age(25))]'
     );
@@ -104,7 +104,7 @@ text_history(content("First coined as a term in 1956 by John McCarthy at the Dar
       // Parse each line individually
       const lines = input.trim().split("\n");
       lines.forEach((line) => {
-        const result = parse(line);
+        const result = TSON.parse(line);
         expect(result).toBeDefined();
         // Just check that it parses without error, we don't need to verify exact structure
       });
@@ -128,7 +128,7 @@ order_item(orderId("o2002"), productId("p3003"), name("Bluetooth Speaker"), quan
       // Parse each line individually
       const lines = input.trim().split("\n");
       lines.forEach((line) => {
-        const result = parse(line);
+        const result = TSON.parse(line);
         expect(result).toBeDefined();
         // Just check that it parses without error, we don't need to verify exact structure
       });
@@ -154,7 +154,7 @@ message(id("msg1"), conversation_id("conv123"), sender_id("user1"), content("Hi 
       // Parse each line individually
       const lines = input.trim().split("\n");
       lines.forEach((line) => {
-        const result = parse(line);
+        const result = TSON.parse(line);
         expect(result).toBeDefined();
         // Just check that it parses without error, we don't need to verify exact structure
       });
@@ -176,7 +176,7 @@ log_session_end(sessionId("sess12345"), endTime("2023-06-01T08:07:00Z"), duratio
       // Parse each line individually
       const lines = input.trim().split("\n");
       lines.forEach((line) => {
-        const result = parse(line);
+        const result = TSON.parse(line);
         expect(result).toBeDefined();
         // Just check that it parses without error, we don't need to verify exact structure
       });
@@ -200,7 +200,7 @@ product_availability(productId("prod001"), storeId("store002"), quantity(12), lo
       // Parse each line individually
       const lines = input.trim().split("\n");
       lines.forEach((line) => {
-        const result = parse(line);
+        const result = TSON.parse(line);
         expect(result).toBeDefined();
         // Just check that it parses without error, we don't need to verify exact structure
       });
@@ -218,17 +218,17 @@ product_availability(productId("prod001"), storeId("store002"), quantity(12), lo
 
       examples.forEach((tsonExample) => {
         // Parse TSON to JS object
-        const jsObject = parse(tsonExample);
+        const jsObject = TSON.parse(tsonExample);
 
         console.log(jsObject);
 
         // Convert JSON back to TSON
-        const backToTson = stringify(jsObject);
+        const backToTson = TSON.stringify(jsObject);
 
         console.log(backToTson);
 
         // Parse the reconverted TSON
-        const reconvertedObj = parse(backToTson);
+        const reconvertedObj = TSON.parse(backToTson);
 
         // Compare the original parsed object with the reconverted object
         expect(reconvertedObj).toEqual(jsObject);
