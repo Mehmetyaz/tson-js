@@ -3,7 +3,7 @@ import { describe, test, expect } from "@jest/globals";
 
 describe("TSON Parser with New Syntax", () => {
   test("Basic object with new syntax", () => {
-    const input = `person{name"John Doe", age#30, active?true, balance=123.45, notes}`;
+    const input = `person{name"John Doe" age#30 active?true balance=123.45 notes~}`;
     const expected = {
       person: {
         name: "John Doe",
@@ -16,193 +16,193 @@ describe("TSON Parser with New Syntax", () => {
     expect(TSON.parse(input)).toEqual(expected);
   });
 
-  // test("Nested objects with new syntax", () => {
-  //   const input = `user{
-  //     name"Alice",
-  //     age#28,
-  //     address{
-  //       street"123 Main St",
-  //       city"Wonderland",
-  //       zipcode#12345
-  //     }
-  //   }`;
-  //   const expected = {
-  //     user: {
-  //       name: "Alice",
-  //       age: 28,
-  //       address: {
-  //         street: "123 Main St",
-  //         city: "Wonderland",
-  //         zipcode: 12345,
-  //       },
-  //     },
-  //   };
-  //   expect(TSON.parse(input)).toEqual(expected);
-  // });
+  test("Nested objects with new syntax", () => {
+    const input = `user{
+      name"Alice",
+      age#28,
+      address{
+        street"123 Main St",
+        city"Wonderland",
+        zipcode#12345
+      }
+    }`;
+    const expected = {
+      user: {
+        name: "Alice",
+        age: 28,
+        address: {
+          street: "123 Main St",
+          city: "Wonderland",
+          zipcode: 12345,
+        },
+      },
+    };
+    expect(TSON.parse(input)).toEqual(expected);
+  });
 
-  // test("Arrays with new syntax", () => {
-  //   const input = `colors["red", "green", "blue"]`;
-  //   const expected = { colors: ["red", "green", "blue"] };
-  //   expect(TSON.parse(input)).toEqual(expected);
-  // });
+  test("Arrays with new syntax", () => {
+    const input = `colors["red", "green", "blue"]`;
+    const expected = { colors: ["red", "green", "blue"] };
+    expect(TSON.parse(input)).toEqual(expected);
+  });
 
-  // test("Mixed array items", () => {
-  //   const input = `items[
-  //     product{name"Laptop", price&999.99},
-  //     {name"Mouse", price&49.99},
-  //     "Keyboard",
-  //     #42
-  //   ]`;
-  //   const expected = {
-  //     items: [
-  //       { product: { name: "Laptop", price: 999.99 } },
-  //       { name: "Mouse", price: 49.99 },
-  //       "Keyboard",
-  //       42,
-  //     ],
-  //   };
-  //   expect(TSON.parse(input)).toEqual(expected);
-  // });
+  test("Mixed array items", () => {
+    const input = `items[
+      product{name"Laptop" price=999.99}
+      {name"Mouse" price=49.99}
+      "Keyboard"
+      #42
+    ]`;
+    const expected = {
+      items: [
+        { product: { name: "Laptop", price: 999.99 } },
+        { name: "Mouse", price: 49.99 },
+        "Keyboard",
+        42,
+      ],
+    };
+    expect(TSON.parse(input)).toEqual(expected);
+  });
 
-  // test("Null values", () => {
-  //   const input = `person{name"John", email, phone}`;
-  //   const expected = { person: { name: "John", email: null, phone: null } };
-  //   expect(TSON.parse(input)).toEqual(expected);
-  // });
+  test("Null values", () => {
+    const input = `person{name"John" email~ phone~}`;
+    const expected = { person: { name: "John", email: null, phone: null } };
+    expect(TSON.parse(input)).toEqual(expected);
+  });
 
-  // test("Boolean values", () => {
-  //   const input = `settings{darkMode=true, notifications=false}`;
-  //   const expected = { settings: { darkMode: true, notifications: false } };
-  //   expect(TSON.parse(input)).toEqual(expected);
-  // });
+  test("Boolean values", () => {
+    const input = `settings{darkMode?true notifications?false}`;
+    const expected = { settings: { darkMode: true, notifications: false } };
+    expect(TSON.parse(input)).toEqual(expected);
+  });
 
-  // test("Number values", () => {
-  //   const input = `stats{count#42, average&3.14, zero#0}`;
-  //   const expected = { stats: { count: 42, average: 3.14, zero: 0 } };
-  //   expect(TSON.parse(input)).toEqual(expected);
-  // });
+  test("Number values", () => {
+    const input = `stats{count#42 average=3.14 zero#0}`;
+    const expected = { stats: { count: 42, average: 3.14, zero: 0 } };
+    expect(TSON.parse(input)).toEqual(expected);
+  });
 
-  // test("Complex nested structure", () => {
-  //   const input = `
-  //   order{
-  //     id"ORD-12345",
-  //     customer{
-  //       id"CUST-789",
-  //       name"John Doe",
-  //       email"john@example.com"
-  //     },
-  //     items[
-  //       {
-  //         id"ITEM-001",
-  //         name"Headphones",
-  //         quantity#1,
-  //         price&99.99
-  //       },
-  //       {
-  //         id"ITEM-002",
-  //         name"Phone Case",
-  //         quantity#2,
-  //         price&19.99
-  //       }
-  //     ],
-  //     shipped=true,
-  //     total&139.97
-  //   }`;
+  test("Complex nested structure", () => {
+    const input = `
+    order{
+      id"ORD-12345"
+      customer{
+        id"CUST-789"
+        name"John Doe"
+        email"john@example.com"
+      }
+      items[
+        {
+          id"ITEM-001"
+          name"Headphones"
+          quantity#1
+          price=99.99
+        }
+        {
+          id"ITEM-002"
+          name"Phone Case"
+          quantity#2
+          price=19.99
+        }
+      ],
+      shipped?true
+      total=139.97
+    }`;
 
-  //   const expected = {
-  //     order: {
-  //       id: "ORD-12345",
-  //       customer: {
-  //         id: "CUST-789",
-  //         name: "John Doe",
-  //         email: "john@example.com",
-  //       },
-  //       items: [
-  //         {
-  //           id: "ITEM-001",
-  //           name: "Headphones",
-  //           quantity: 1,
-  //           price: 99.99,
-  //         },
-  //         {
-  //           id: "ITEM-002",
-  //           name: "Phone Case",
-  //           quantity: 2,
-  //           price: 19.99,
-  //         },
-  //       ],
-  //       shipped: true,
-  //       total: 139.97,
-  //     },
-  //   };
+    const expected = {
+      order: {
+        id: "ORD-12345",
+        customer: {
+          id: "CUST-789",
+          name: "John Doe",
+          email: "john@example.com",
+        },
+        items: [
+          {
+            id: "ITEM-001",
+            name: "Headphones",
+            quantity: 1,
+            price: 99.99,
+          },
+          {
+            id: "ITEM-002",
+            name: "Phone Case",
+            quantity: 2,
+            price: 19.99,
+          },
+        ],
+        shipped: true,
+        total: 139.97,
+      },
+    };
 
-  //   expect(TSON.parse(input)).toEqual(expected);
-  // });
+    expect(TSON.parse(input)).toEqual(expected);
+  });
 
-  // test("Stringify with new syntax", () => {
-  //   const obj = {
-  //     person: {
-  //       name: "John Doe",
-  //       age: 30,
-  //       isActive: true,
-  //       scores: [98, 87, 95],
-  //       address: {
-  //         street: "123 Main St",
-  //         city: "Anytown",
-  //       },
-  //     },
-  //   };
+  test("Stringify with new syntax", () => {
+    const obj = {
+      person: {
+        name: "John Doe",
+        age: 30,
+        isActive: true,
+        scores: [98, 87, 95],
+        address: {
+          street: "123 Main St",
+          city: "Anytown",
+        },
+      },
+    };
 
-  //   const tsonString = TSON.stringify(obj);
-  //   const parsedBack = TSON.parse(tsonString);
+    const tsonString = TSON.stringify(obj);
+    const parsedBack = TSON.parse(tsonString);
 
-  //   expect(parsedBack).toEqual(obj);
-  // });
+    expect(parsedBack).toEqual(obj);
+  });
 
   test("Array with direct number values", () => {
-    const input = `[#1, #2, #3, #4, #5]`;
+    const input = `[#1 #2 #3 #4 #5]`;
     const expected = [1, 2, 3, 4, 5];
     expect(TSON.parse(input)).toEqual(expected);
   });
 
   test("Array with direct float values", () => {
-    const input = `[=1.1, =2.2, =3.3]`;
+    const input = `[=1.1 =2.2 =3.3]`;
     const expected = [1.1, 2.2, 3.3];
     expect(TSON.parse(input)).toEqual(expected);
   });
 
   test("Array with direct boolean values", () => {
-    const input = `[?true, ?false, ?true]`;
+    const input = `[?true ?false ?true]`;
     const expected = [true, false, true];
     expect(TSON.parse(input)).toEqual(expected);
   });
 
   test("Mixed array with various types", () => {
-    const input = `["string", #42, =3.14, ?true, {name"John"}]`;
+    const input = `["string" #42 =3.14 ?true {name"John"}]`;
     const expected = ["string", 42, 3.14, true, { name: "John" }];
     expect(TSON.parse(input)).toEqual(expected);
   });
 
   test("Array with type specifier", () => {
-    const input = `numbers<#>[1, 2, 3, 4, 5]`;
+    const input = `numbers<#>[1 2 3 4 5]`;
     const expected = { numbers: [1, 2, 3, 4, 5] };
     expect(TSON.parse(input)).toEqual(expected);
   });
 
   test("Array with float type specifier", () => {
-    const input = `prices<=>[ 10.5, 20.99, 5.0]`;
+    const input = `prices<=>[ 10.5 20.99 5.0]`;
     const expected = { prices: [10.5, 20.99, 5.0] };
     expect(TSON.parse(input)).toEqual(expected);
   });
 
   test("Array with boolean type specifier", () => {
-    const input = `flags<?>[ true, false, true]`;
+    const input = `flags<?>[ true false true]`;
     const expected = { flags: [true, false, true] };
     expect(TSON.parse(input)).toEqual(expected);
   });
 
   test("Array with type specifier allows items without explicit type markers", () => {
-    const input = `nums<#>[1, 2, 3, 4, 5]`;
+    const input = `nums<#>[1 2 3 4 5]`;
     const expected = { nums: [1, 2, 3, 4, 5] };
     expect(TSON.parse(input)).toEqual(expected);
   });
@@ -225,15 +225,8 @@ describe("TSON Parser with New Syntax", () => {
 
   test("Array with type specifier auto-converts values", () => {
     // Float 3.5 should be converted to integer 3 in a int-typed array
-    const input = `nums<#>[1, 2, =3.5]`;
-    const expected = { nums: [1, 2, 3.5] };
-    expect(TSON.parse(input)).toEqual(expected);
-  });
-
-  test("Array type specifier doesn't override explicit type markers", () => {
-    // Açıkça belirtilen tip belirteci korunur, genel dizinin tipi override edilmez
-    const input = `nums<#>[1, 2, =3.5]`;
-    const expected = { nums: [1, 2, 3.5] };
+    const input = `nums<#>[1, 2, ?true]`;
+    const expected = { nums: [1, 2, true] };
     expect(TSON.parse(input)).toEqual(expected);
   });
 
@@ -287,17 +280,17 @@ describe("TSON Parser with New Syntax", () => {
   test("should parse arrays with direct values", () => {
     const tests = [
       {
-        input: "[#1, #2, #3]",
+        input: "[#1 #2 #3]",
         expected: [1, 2, 3],
         description: "Array with direct integer values",
       },
       {
-        input: "[=10.5, =20.75, =30.25]",
+        input: "[=10.5 =20.75 =30.25]",
         expected: [10.5, 20.75, 30.25],
         description: "Array with direct float values",
       },
       {
-        input: "[?true, ?false, ?true]",
+        input: "[?true ?false ?true]",
         expected: [true, false, true],
         description: "Array with direct boolean values",
       },

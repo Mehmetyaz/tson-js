@@ -1,5 +1,7 @@
 # JavaScript Implementation of TSON
 
+## This is a newly created project. Not ready for production use.
+
 TSON (Token-Saving Object Notation) is a compact, human-readable data format designed for token-efficient, easy-to-parse data representation. This library provides TypeScript/JavaScript utilities for parsing and generating TSON.
 
 ## Installation
@@ -16,11 +18,11 @@ npm install tson-js
 import { parse } from "tson-js";
 
 // Parse TSON string to JavaScript object
-const data = parse("user(name(John), age(30))");
-console.log(data); // { user: { name: 'John', age: 30 } }
+const data = parse('{name"John" age#30}');
+console.log(data); // { name: 'John', age: 30 }
 
 // Parse TSON array
-const colors = parse("colors[red, green, blue]");
+const colors = parse('colors["red" "green" "blue"]');
 console.log(colors); // { colors: ['red', 'green', 'blue'] }
 ```
 
@@ -30,11 +32,11 @@ console.log(colors); // { colors: ['red', 'green', 'blue'] }
 import { tsonToJSON } from "tson-js";
 
 // Convert TSON to JSON string
-const json = tsonToJSON("user(name(John), age(30))");
+const json = tsonToJSON('user{name"John" age#30}');
 console.log(json); // {"user":{"name":"John","age":30}}
 
 // Pretty print with formatting
-const prettyJson = tsonToJSON("user(name(John), age(30))", true);
+const prettyJson = tsonToJSON('user{name"John" age#30}', true);
 console.log(prettyJson);
 // {
 //   "user": {
@@ -51,15 +53,15 @@ import { stringify } from "tson-js";
 
 // Convert JavaScript object to TSON
 const tson = stringify({ user: { name: "John", age: 30 } });
-console.log(tson); // user(name("John"), age(30))
+console.log(tson); // user{name"John" age#30}
 
 // Pretty print with formatting
 const prettyTson = stringify({ user: { name: "John", age: 30 } }, true);
 console.log(prettyTson);
-// user(
-//   name("John"),
-//   age(30)
-// )
+// user{
+//   name"John"
+//   age#30
+// }
 ```
 
 ### Converting JSON to TSON
@@ -69,7 +71,7 @@ import { jsonToTSON } from "tson-js";
 
 // Convert JSON string to TSON
 const tson = jsonToTSON('{"user":{"name":"John","age":30}}');
-console.log(tson); // user(name("John"), age(30))
+console.log(tson); // user{name"John" age#30}
 ```
 
 ## API Reference
@@ -102,6 +104,41 @@ Converts JSON string to TSON string.
 - `ParseOptions`: Options for parsing
 
 ## TSON Format
+
+TSON is a compact data format designed to reduce tokens in LLM API responses.
+
+### Syntax
+
+- Native types have prefixes:
+  - `#` for integers: `#123`
+  - `=` for float: `=123.45`
+  - `?` for booleans: `?true`
+  - `~` for null values: `~`
+- Strings are wrapped with `""`, JSON escaped strings are supported: `"\"Hello, world!\""`
+- Arrays are wrapped with `[]`, array items are separated by a space:
+  ```
+  [#123 =123.45 ?true ~ "string" {obj_key{inner_key#123}} ["array" "item"]]
+  ```
+- Objects are wrapped with `{}`, object keys & values are separated by a space, with type-specific prefixes after keys:
+  ```
+  {key#123 null_value~ obj_key{inner_key#123} array_key[?true =123.45 ["nested" "array"]]}
+  ```
+
+### Naming Rules
+
+- Object properties must be named.
+- Root values or array items can be named or unnamed:
+  - Named:
+    - `person{name"John"}` → JSON object will be `{person: {name: "John"}}`
+    - `people[person{name"John"} {some"Value"}]` → JSON object will be `{people: [{person: {name: "John"}}, {some: "Value"}]}`
+  - Unnamed:
+    - `{name"John"}` → JSON object will be `{name: "John"}`
+
+### TSONL (TSON Line)
+
+- Like JSONL, but with TSON syntax.
+- Each line is a valid TSON value.
+- Lines are separated by newlines.
 
 For more details about the TSON format, please check the [main TSON documentation](https://github.com/yourusername/tson).
 

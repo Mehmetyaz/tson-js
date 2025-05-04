@@ -1,6 +1,6 @@
 {
   "name": "tson-js",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "TypeScript implementation of TSON (Token-Saving Object Notation)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
