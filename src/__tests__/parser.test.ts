@@ -95,7 +95,7 @@ describe("TSON Parser", () => {
   text_definition{content"The capability of a machine to imitate intelligent human behavior."}
   image{url"https://example.com/ai_image.jpg" caption"Visual representation of AI concept"}
   text_example{content"AI systems are typically categorized as either 'narrow AI' (designed for specific tasks) or 'general AI' (capable of performing any intellectual task)."}
-  audio{url"https://example.com/ai_pronunciation.mp3" duration#2.5 transcript"Artificial Intelligence"}
+  audio{url"https://example.com/ai_pronunciation.mp3" duration=2.5 transcript"Artificial Intelligence"}
   text_history{content"First coined as a term in 1956 by John McCarthy at the Dartmouth Conference."}`;
 
       // Parse each line individually
@@ -132,13 +132,13 @@ describe("TSON Parser", () => {
     });
 
     test("should parse schema.tsonl", () => {
-      const input = `schema{name"conversation" version#1.0 description"Schema for conversation data"}
+      const input = `schema{name"conversation" version=1.0 description"Schema for conversation data"}
   schema_field{schema"conversation" field"id" dataType"string" required?true description"Unique conversation identifier"}
   schema_field{schema"conversation" field"participants" dataType"array" required?true description"List of conversation participants"}
   schema_field{schema"conversation" field"created_at" dataType"timestamp" required?true description"When conversation was created"}
   schema_field{schema"conversation" field"updated_at" dataType"timestamp" required?true description"When conversation was last updated"}
   schema_field{schema"conversation" field"title" dataType"string" required?false description"Optional conversation title"}
-  schema{name"message" version#1.0 description"Schema for message data within conversations"}
+  schema{name"message" version=1 description"Schema for message data within conversations"}
   schema_field{schema"message" field"id" dataType"string" required?true description"Unique message identifier"}
   schema_field{schema"message" field"conversation_id" dataType"string" required?true description"Reference to parent conversation"}
   schema_field{schema"message" field"sender_id" dataType"string" required?true description"User ID of message sender"}
@@ -208,7 +208,7 @@ describe("TSON Parser", () => {
       const examples = [
         `metadata{term"Artificial Intelligence" language"en" part_of_speech"noun"}`,
         `user{id"u1001" username"johndoe" fullName"John Doe" registeredAt"2023-05-15T10:30:00Z"}`,
-        `schema{name"conversation" version#1.0 description"Schema for conversation data"}`,
+        `schema{name"conversation" version=1.0 description"Schema for conversation data"}`,
         `log_session{sessionId"sess12345" startTime"2023-06-01T08:00:00Z" userId"user789" deviceType"mobile"}`,
         `product_catalog{catalogId"cat001" name"Summer Products 2023" publishedAt"2023-05-01T00:00:00Z" categories["outdoor" "sports" "summer" "beachwear"]}`,
       ];
@@ -226,6 +226,16 @@ describe("TSON Parser", () => {
         // Compare the original parsed object with the reconverted object
         expect(reconvertedObj).toEqual(jsObject);
       });
+    });
+  });
+
+  describe("---", () => {
+    const f =
+      'text"<h1>Present Simple: Positive Sentences</h1>\\n<p>The present simple tense is used to describe actions that happen regularly, facts, or routines.</p>\\n<h2>How to Form Positive Sentences</h2>\\n<ul>\\n  <li>Use the base form of the verb after the subject.</li>\\n  <li>Add <b>-s</b> or <b>-es</b> to the verb when the subject is <b>he</b>, <b>she</b>, or <b>it</b>.</li>\\n</ul>\\n<h3>Examples</h3>\\n<ul>\\n  <li><b>I wake up at 7 a.m.</b></li>\\n  <li><b>She drinks coffee every morning.</b></li>\\n  <li><b>They go to school by bus.</b></li>\\n  <li><b>He plays football on Saturdays.</b></li>\\n</ul>\\n<h2>Common Daily Routines</h2>\\n<p>Present simple is often used to talk about daily activities:</p>\\n<ul>\\n  <li>I brush my teeth.</li>\\n  <li>My mother cooks breakfast.</li>\\n  <li>We watch TV in the evening.</li>\\n</ul>"';
+
+    test("---", () => {
+      const result = TSON.parse(f);
+      console.log(result.text);
     });
   });
 });

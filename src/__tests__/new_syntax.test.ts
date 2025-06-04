@@ -249,8 +249,8 @@ describe("TSON Parser with New Syntax", () => {
   test("Object with typed array properties", () => {
     const input = `{
       integers<#>[1, 2, 3],
-      floats<=>[ 1.1, 2.2, 3.3],
-      booleans<?>[ true, false]
+      floats<=>[1.1, 2.2, 3.3],
+      booleans<?>[true, false]
     }`;
     const expected = {
       integers: [1, 2, 3],
