@@ -1,26 +1,7 @@
-/**
- * Parse TSON string to JavaScript value
- * @param input TSON string
- * @param options Parsing options
- * @returns Parsed JavaScript value
- */
-function parse(input: string): any {
-  return new Parser(input).parse();
-}
-
-/**
- * Stringify JavaScript value to TSON string
- * @param value JavaScript value
- * @param pretty Whether to format the output TSON
- * @returns TSON string
- */
-function stringify(value: any, pretty: boolean = false): string {
-  return Stringifier.stringify(value, pretty);
-}
-
 export const TSON = {
-  parse,
-  stringify,
+  parse: (input: string) => new Parser(input).parse(),
+  stringify: (value: any, pretty: boolean = false) =>
+    Stringifier.stringify(value, pretty),
 } as const;
 
 interface Cursor {
