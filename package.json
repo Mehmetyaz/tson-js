@@ -1,9 +1,27 @@
 {
   "name": "tson-js",
-  "version": "0.1.2",
+  "version": "0.1.4-1",
   "description": "TypeScript implementation of TSON (Token-Saving Object Notation)",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mehmetyaz/tson.git",
+    "directory": "packages/tson-js"
+  },
+  "homepage": "https://github.com/Mehmetyaz/tson",
+  "bugs": {
+    "url": "https://github.com/Mehmetyaz/tson/issues"
+  },
+  "author": "Mehmet Yaz",
+  "license": "Apache-2.0",
+  "keywords": [
+    "tson",
+    "parser",
+    "json",
+    "token",
+    "notation"
+  ],
   "files": [
     "dist"
   ],
@@ -13,15 +31,6 @@
     "lint": "eslint src --ext .ts",
     "prepublishOnly": "npm run build"
   },
-  "keywords": [
-    "tson",
-    "parser",
-    "json",
-    "token",
-    "notation"
-  ],
-  "author": "",
-  "license": "MIT",
   "devDependencies": {
     "@jest/globals": "^29.7.0",
     "@types/jest": "^29.5.4",

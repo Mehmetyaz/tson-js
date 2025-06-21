@@ -1,8 +1,17 @@
-# JavaScript Implementation of TSON
+# TSON-JS - JavaScript/TypeScript Implementation
 
-## This is a newly created project. Not ready for production use.
+> ⚠️ **EXPERIMENTAL PROJECT** - This is a newly created project. Not ready for production use.
 
-TSON (Token-Saving Object Notation) is a compact, human-readable data format designed for token-efficient, easy-to-parse data representation. This library provides TypeScript/JavaScript utilities for parsing and generating TSON.
+JavaScript/TypeScript implementation of TSON (Token-Saving Object Notation) - a compact data format designed to reduce tokens in LLM API responses by 15-30% while maintaining readability and streaming capability.
+
+## Features
+
+- **Complete TSON Parser**: Parse TSON strings to JavaScript objects
+- **TSON Stringifier**: Convert JavaScript objects to TSON format
+- **Error Handling**: Comprehensive error reporting with line/column information
+- **TypeScript Support**: Full TypeScript definitions included
+- **Pretty Printing**: Optional formatted output for both parsing and stringification
+- **Quote Selection**: Smart quote selection to minimize escaping
 
 ## Installation
 
@@ -10,138 +19,245 @@ TSON (Token-Saving Object Notation) is a compact, human-readable data format des
 npm install tson-js
 ```
 
-## Usage
+## Quick Start
 
-### Parsing TSON to JavaScript
+```typescript
+import { TSON } from "tson-js";
 
-```javascript
-import { parse } from "tson-js";
+// Parse TSON to JavaScript
+const data = TSON.parse('user{name"John" age#30 active?true}');
+console.log(data); // { user: { name: 'John', age: 30, active: true } }
 
-// Parse TSON string to JavaScript object
-const data = parse('{name"John" age#30}');
-console.log(data); // { name: 'John', age: 30 }
-
-// Parse TSON array
-const colors = parse('colors["red" "green" "blue"]');
-console.log(colors); // { colors: ['red', 'green', 'blue'] }
-```
-
-### Converting TSON to JSON
-
-```javascript
-import { tsonToJSON } from "tson-js";
-
-// Convert TSON to JSON string
-const json = tsonToJSON('user{name"John" age#30}');
-console.log(json); // {"user":{"name":"John","age":30}}
-
-// Pretty print with formatting
-const prettyJson = tsonToJSON('user{name"John" age#30}', true);
-console.log(prettyJson);
-// {
-//   "user": {
-//     "name": "John",
-//     "age": 30
-//   }
-// }
-```
-
-### Converting JavaScript to TSON
-
-```javascript
-import { stringify } from "tson-js";
-
-// Convert JavaScript object to TSON
-const tson = stringify({ user: { name: "John", age: 30 } });
-console.log(tson); // user{name"John" age#30}
-
-// Pretty print with formatting
-const prettyTson = stringify({ user: { name: "John", age: 30 } }, true);
-console.log(prettyTson);
-// user{
-//   name"John"
-//   age#30
-// }
-```
-
-### Converting JSON to TSON
-
-```javascript
-import { jsonToTSON } from "tson-js";
-
-// Convert JSON string to TSON
-const tson = jsonToTSON('{"user":{"name":"John","age":30}}');
-console.log(tson); // user{name"John" age#30}
+// Convert JavaScript to TSON
+const tson = TSON.stringify({ user: { name: "John", age: 30, active: true } });
+console.log(tson); // user{name"John" age#30 active?true}
 ```
 
 ## API Reference
 
-### `parse(input: string, options?: ParseOptions): TSONValue`
+### `TSON.parse(input: string): any`
 
-Parses TSON string to JavaScript value.
+Parses a TSON string and returns the corresponding JavaScript value.
 
-**Options:**
+```typescript
+// Basic parsing
+const user = TSON.parse('user{name"John" age#30}');
+// Result: { user: { name: "John", age: 30 } }
 
-- `preserveComments` (boolean): Whether to preserve comments in the output. Default: `false`
+// Array parsing
+const colors = TSON.parse('["red" "green" "blue"]');
+// Result: ["red", "green", "blue"]
 
-### `tsonToJSON(input: string, pretty?: boolean): string`
+// Named array
+const namedColors = TSON.parse('colors["red" "green" "blue"]');
+// Result: { colors: ["red", "green", "blue"] }
 
-Converts TSON string to JSON string.
+// Mixed types
+const mixed = TSON.parse("{id#123 price=99.99 available?true notes~}");
+// Result: { id: 123, price: 99.99, available: true, notes: null }
+```
 
-### `stringify(value: TSONValue, pretty?: boolean): string`
+### `TSON.stringify(value: any, pretty?: boolean): string`
 
-Converts JavaScript value to TSON string.
+Converts a JavaScript value to TSON format.
 
-### `jsonToTSON(input: string, pretty?: boolean): string`
+```typescript
+// Basic stringification
+const tson = TSON.stringify({ name: "John", age: 30 });
+// Result: {name"John" age#30}
 
-Converts JSON string to TSON string.
+// Pretty printing
+const prettyTson = TSON.stringify(
+  {
+    user: { name: "John", age: 30 },
+  },
+  true
+);
+// Result:
+// user{
+//   name"John"
+//   age#30
+// }
 
-## Types
+// Named root object
+const named = TSON.stringify({ colors: ["red", "green"] });
+// Result: colors["red" "green"]
+```
 
-- `TSONValue`: Any valid TSON value (string, number, boolean, null, undefined, object, array)
-- `TSONObject`: Object with string keys and TSON values
-- `TSONArray`: Array of TSON values
-- `ParseOptions`: Options for parsing
+## Type Handling
 
-## TSON Format
+TSON-JS automatically handles JavaScript types with appropriate TSON prefixes:
 
-TSON is a compact data format designed to reduce tokens in LLM API responses.
+| JavaScript Type    | TSON Format            | Example               |
+| ------------------ | ---------------------- | --------------------- |
+| `number` (integer) | `#value`               | `#123`                |
+| `number` (float)   | `=value`               | `=99.99`              |
+| `boolean`          | `?value`               | `?true`               |
+| `null`             | `~`                    | `~`                   |
+| `string`           | `"value"` or `'value'` | `"Hello"`             |
+| `object`           | `{key-value-pairs}`    | `{name"John" age#30}` |
+| `array`            | `[item1 item2]`        | `[#1 #2]`             |
 
-### Syntax
+## String Handling
 
-- Native types have prefixes:
-  - `#` for integers: `#123`
-  - `=` for float: `=123.45`
-  - `?` for booleans: `?true`
-  - `~` for null values: `~`
-- Strings are wrapped with `""`, JSON escaped strings are supported: `"\"Hello, world!\""`
-- Arrays are wrapped with `[]`, array items are separated by a space:
-  ```
-  [#123 =123.45 ?true ~ "string" {obj_key{inner_key#123}} ["array" "item"]]
-  ```
-- Objects are wrapped with `{}`, object keys & values are separated by a space, with type-specific prefixes after keys:
-  ```
-  {key#123 null_value~ obj_key{inner_key#123} array_key[?true =123.45 ["nested" "array"]]}
-  ```
+TSON-JS intelligently selects quotes to minimize escaping:
 
-### Naming Rules
+```typescript
+// Automatic quote selection
+TSON.stringify({ message: "John's car" });
+// Result: {message"John's car"}
 
-- Object properties must be named.
-- Root values or array items can be named or unnamed:
-  - Named:
-    - `person{name"John"}` → JSON object will be `{person: {name: "John"}}`
-    - `people[person{name"John"} {some"Value"}]` → JSON object will be `{people: [{person: {name: "John"}}, {some: "Value"}]}`
-  - Unnamed:
-    - `{name"John"}` → JSON object will be `{name: "John"}`
+TSON.stringify({ message: 'He said "Hello"' });
+// Result: {message'He said "Hello"'}
 
-### TSONL (TSON Line)
+// Escaping when necessary
+TSON.stringify({ mixed: 'It\'s "quoted" text' });
+// Result: {mixed"It's \"quoted\" text"}
+```
 
-- Like JSONL, but with TSON syntax.
-- Each line is a valid TSON value.
-- Lines are separated by newlines.
+## Error Handling
 
-For more details about the TSON format, please check the [main TSON documentation](https://github.com/yourusername/tson).
+TSON-JS provides detailed error information:
+
+```typescript
+import { TSONParseError, TSONParseErrors } from "tson-js";
+
+try {
+  TSON.parse("invalid{syntax");
+} catch (error) {
+  if (error instanceof TSONParseErrors) {
+    error.errors.forEach((err) => {
+      console.log(`Error: ${err.message}`);
+      console.log(
+        `Location: line ${err.cursor.line}, column ${err.cursor.column}`
+      );
+    });
+  }
+}
+```
+
+## TSONL Support
+
+Process TSONL (TSON Lines) format:
+
+```typescript
+const tsonl = `
+user{name"John" age#30}
+user{name"Jane" age#25}
+user{name"Bob" age#35}
+`;
+
+const users = tsonl
+  .trim()
+  .split("\n")
+  .map((line) => TSON.parse(line));
+// Result: [
+//   { user: { name: "John", age: 30 } },
+//   { user: { name: "Jane", age: 25 } },
+//   { user: { name: "Bob", age: 35 } }
+// ]
+
+// Convert back to TSONL
+const backToTsonl = users.map((user) => TSON.stringify(user)).join("\n");
+```
+
+## Advanced Examples
+
+### Complex Nested Objects
+
+```typescript
+const complex = {
+  order: {
+    id: "ORD-123",
+    items: [
+      { name: "Headphones", price: 99.99, quantity: 1 },
+      { name: "Case", price: 19.99, quantity: 2 },
+    ],
+    customer: { name: "John", email: "john@example.com" },
+    metadata: { source: "web", campaign: null },
+  },
+};
+
+const tson = TSON.stringify(complex);
+// Result: order{id"ORD-123" items[{name"Headphones" price=99.99 quantity#1} {name"Case" price=19.99 quantity#2}] customer{name"John" email"john@example.com"} metadata{source"web" campaign~}}
+```
+
+### Configuration Objects
+
+```typescript
+const config = {
+  app: { name: "MyApp", debug: false, port: 8080 },
+  database: { host: "localhost", ssl: true, timeout: 30 },
+};
+
+const configTson = TSON.stringify(config, true);
+// Result:
+// app{
+//   name"MyApp"
+//   debug?false
+//   port#8080
+// }
+// database{
+//   host"localhost"
+//   ssl?true
+//   timeout#30
+// }
+```
+
+## Token Efficiency
+
+Comparison with JSON:
+
+```typescript
+const data = { user: { name: "John", age: 30, active: true } };
+
+// JSON: 47 characters
+JSON.stringify(data); // {"user":{"name":"John","age":30,"active":true}}
+
+// TSON: 32 characters (32% reduction)
+TSON.stringify(data); // user{name"John" age#30 active?true}
+```
+
+## TypeScript Types
+
+```typescript
+import { TSONParseError, TSONParseErrors } from "tson-js";
+
+// Error types for handling parse errors
+interface Cursor {
+  position: number;
+  column: number;
+  line: number;
+}
+
+class TSONParseError extends Error {
+  cursor: Cursor;
+  endCursor?: Cursor;
+}
+
+class TSONParseErrors extends Error {
+  errors: TSONParseError[];
+}
+```
+
+## Contributing
+
+This package is part of the experimental TSON project. Contributions are welcome! Please see the main [TSON repository](https://github.com/Mehmetyaz/tson) for contribution guidelines.
+
+## Support
+
+If you find TSON-JS useful, you can support the project:
+
+<a href="https://www.buymeacoffee.com/mehmetyaz"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a computer part&emoji=🔩&slug=mehmetyaz&button_colour=40DCA5&font_colour=ffffff&font_family=Inter&outline_colour=000000&coffee_colour=FFDD00" /></a>
+
+## Documentation
+
+For complete TSON format documentation, see:
+
+- [TSON Format Guide](https://github.com/Mehmetyaz/tson/blob/main/docs/TSON.md)
+- [TSON LLM Instructions](https://github.com/Mehmetyaz/tson/blob/main/docs/TSON_LLM_instructions.md)
+- [Main Project README](https://github.com/Mehmetyaz/tson/blob/main/README.md)
 
 ## License
 
-MIT
+Apache License 2.0 - See [LICENSE](LICENSE) file for details.
