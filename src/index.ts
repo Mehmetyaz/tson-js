@@ -107,7 +107,7 @@ class Parser {
 
     if (!result) {
       this.addError(
-        new TSONParseError("Empty input", this._cursor, this._cursor)
+        new TSONParseError("Empty input", this._cursor, this._cursor),
       );
       this.throwIfErrors();
       return null;
@@ -131,7 +131,7 @@ class Parser {
     const value = this.parseVal();
     if (name.length === 0) {
       this.addError(
-        new TSONParseError("Name is required", startCursor, this._cursor)
+        new TSONParseError("Name is required", startCursor, this._cursor),
       );
     }
     return { name, value };
@@ -161,11 +161,11 @@ class Parser {
     this.addError(
       new TSONParseError(
         `Unexpected character: ${char}. Expected a ${Object.keys(
-          this._parsers
+          this._parsers,
         ).join(", ")}`,
         startCursor,
-        this._cursor
-      )
+        this._cursor,
+      ),
     );
     return undefined;
   }
@@ -191,8 +191,8 @@ class Parser {
             new TSONParseError(
               `Unterminated object at line ${startCursor.line}, column ${startCursor.column}`,
               startCursor,
-              this._cursor
-            )
+              this._cursor,
+            ),
           );
           return object;
         }
@@ -207,8 +207,8 @@ class Parser {
         new TSONParseError(
           `Unterminated object at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
     return object;
@@ -246,8 +246,8 @@ class Parser {
             new TSONParseError(
               `Unterminated array at line ${startCursor.line}, column ${startCursor.column}`,
               startCursor,
-              this._cursor
-            )
+              this._cursor,
+            ),
           );
           return array;
         }
@@ -268,8 +268,8 @@ class Parser {
         new TSONParseError(
           `Unterminated array at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
     return array;
@@ -282,8 +282,8 @@ class Parser {
         new TSONParseError(
           `Unterminated array type specifier at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
       return [];
     }
@@ -294,8 +294,8 @@ class Parser {
         new TSONParseError(
           `Unexpected character: ${closingSymbol}. Expected a >`,
           this._cursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
       return [];
     }
@@ -305,8 +305,8 @@ class Parser {
         new TSONParseError(
           `Unterminated array type specifier at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
       return [];
     }
@@ -317,8 +317,8 @@ class Parser {
         new TSONParseError(
           `Unexpected character: ${openingSymbol}. Expected a [`,
           this._cursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
       return [];
     }
@@ -330,11 +330,11 @@ class Parser {
       this.addError(
         new TSONParseError(
           `Unexpected character: ${type}. Expected a ${Object.keys(
-            this._parsers
+            this._parsers,
           ).join(", ")}`,
           this._cursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
       return [];
     }
@@ -351,8 +351,8 @@ class Parser {
               new TSONParseError(
                 `Unterminated array type specifier at line ${startCursor.line}, column ${startCursor.column}`,
                 startCursor,
-                this._cursor
-              )
+                this._cursor,
+              ),
             );
             return arr;
           }
@@ -378,8 +378,8 @@ class Parser {
         new TSONParseError(
           `Unterminated array type specifier at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
     return arr;
@@ -395,8 +395,8 @@ class Parser {
           new TSONParseError(
             `Unterminated string at line ${startCursor.line}, column ${startCursor.column}`,
             startCursor,
-            this._cursor
-          )
+            this._cursor,
+          ),
         );
         return "";
       }
@@ -451,8 +451,8 @@ class Parser {
         new TSONParseError(
           `Unterminated string at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
 
@@ -462,8 +462,8 @@ class Parser {
         new TSONParseError(
           `Unterminated string at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
 
@@ -480,8 +480,8 @@ class Parser {
           new TSONParseError(
             `Unterminated string at line ${startCursor.line}, column ${startCursor.column}`,
             startCursor,
-            this._cursor
-          )
+            this._cursor,
+          ),
         );
         return "";
       }
@@ -536,8 +536,8 @@ class Parser {
         new TSONParseError(
           `Unterminated string at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
 
@@ -547,8 +547,8 @@ class Parser {
         new TSONParseError(
           `Unterminated string at line ${startCursor.line}, column ${startCursor.column}`,
           startCursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
 
@@ -598,8 +598,8 @@ class Parser {
         new TSONParseError(
           `Invalid float value: ${numberString}`,
           this._cursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
 
@@ -642,8 +642,8 @@ class Parser {
         new TSONParseError(
           `Invalid integer value: ${numberString}`,
           this._cursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
 
@@ -653,8 +653,8 @@ class Parser {
         new TSONParseError(
           `Invalid number: ${numberString}`,
           this._cursor,
-          this._cursor
-        )
+          this._cursor,
+        ),
       );
     }
     return result;
@@ -679,8 +679,8 @@ class Parser {
             new TSONParseError(
               `Invalid boolean value: "${value}${str}". Expected "true" or "false".`,
               startCursor,
-              this._cursor
-            )
+              this._cursor,
+            ),
           );
           return false;
         }
@@ -694,8 +694,8 @@ class Parser {
             new TSONParseError(
               `Invalid boolean value: "${value}${str}". Expected "true" or "false".`,
               startCursor,
-              this._cursor
-            )
+              this._cursor,
+            ),
           );
           return false;
         }
@@ -713,8 +713,8 @@ class Parser {
       new TSONParseError(
         `Invalid boolean value: "${value}${invalidRes}". Expected "true" or "false".`,
         startCursor,
-        this._cursor
-      )
+        this._cursor,
+      ),
     );
     return false;
   }
@@ -752,7 +752,7 @@ class Stringifier {
   static stringify(
     value: any,
     pretty: boolean = true,
-    indent: number = 2
+    indent: number = 2,
   ): string {
     return String(this.stringifyValue(value, pretty, 0, indent));
   }
@@ -761,7 +761,7 @@ class Stringifier {
     arr: any[],
     pretty: boolean,
     depth: number = 0,
-    globalIndent: number = 2
+    globalIndent: number = 2,
   ): string {
     if (arr.length === 0) return "[]";
 
@@ -794,7 +794,7 @@ class Stringifier {
     pretty: boolean,
     depth: number = 0,
     globalIndent: number = 2,
-    isObjectProperty: boolean = false
+    isObjectProperty: boolean = false,
   ): string {
     if (value === undefined) {
       return "";
@@ -859,12 +859,21 @@ class Stringifier {
     }
 
     if (typeof value === "object" && value !== null) {
+      if (typeof value.toJSON === "function") {
+        return this.stringifyValue(
+          value.toJSON(),
+          pretty,
+          depth,
+          globalIndent,
+          isObjectProperty,
+        );
+      }
       return this.objectStringify(
         value,
         pretty,
         depth,
         globalIndent,
-        isObjectProperty
+        isObjectProperty,
       );
     }
 
@@ -874,7 +883,7 @@ class Stringifier {
   private static _indent(
     depth: number,
     indent: number,
-    pretty: boolean
+    pretty: boolean,
   ): string {
     return pretty ? "  ".repeat(indent).repeat(depth) : "";
   }
@@ -884,7 +893,7 @@ class Stringifier {
     pretty: boolean,
     depth: number = 0,
     globalIndent: number = 2,
-    isObjectProperty: boolean = false
+    isObjectProperty: boolean = false,
   ): string {
     const keys = Object.keys(obj);
     if (keys.length === 0) return "{}";
@@ -898,7 +907,7 @@ class Stringifier {
           pretty,
           depth,
           globalIndent,
-          true
+          true,
         )}`;
       }
     }
@@ -920,7 +929,7 @@ class Stringifier {
           pretty,
           depth + 1,
           undefined,
-          true
+          true,
         );
         if (pretty) {
           return `${innerIndent}${key}${strValue}`;
